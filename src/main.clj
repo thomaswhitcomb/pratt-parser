@@ -6,7 +6,8 @@
 
   (defn -main
     [& args]
+    (prn "running")
     (let [
           lex ((l/new-lexer "123+456+789") :start)
           parser (p/new-parser lex)]
-      (parser 0)))
+      (prn (parser 0))))
