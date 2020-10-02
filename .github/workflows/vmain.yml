@@ -26,4 +26,4 @@ jobs:
       - name: Run a multi-line script
         run: |
           brew install clojure/tools/clojure
-          clj -m main
+          make test
