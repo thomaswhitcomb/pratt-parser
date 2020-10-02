@@ -17,6 +17,8 @@
    "="  :equal
    "!=" :not-equal
    "**" :power
+   "("  :left-paren
+   ")"  :right-paren
    "~"  :tilda })
 
 (defn is-alpha [c]
@@ -47,7 +49,7 @@
    :value (take-while (fn [c] (or (is-alpha c) (is-digit c))) cs)})
 
 (defn operator [cs]
-  (let [x (take-while (fn [c] (and (not (is-alpha c)) (not (is-digit c)))) cs)]
+  (let [x (take-while (fn [c] (and (not (= c \space)) (not (is-alpha c)) (not (is-digit c)))) cs)]
   {:type (operators (to-str x))
    :value x}))
 
@@ -56,20 +58,21 @@
       (count value) 
     (remove-leading-whitespace tail)))
 
-(defn peek_ [[h :as all]]
+(defn peek_ [cs]
   (normalize-token 
-    (cond 
-      (nil? h) 
-      {:type :eof :value ""}
+    (let [[h :as all] (remove-leading-whitespace cs)] 
+      (cond 
+        (nil? h) 
+        {:type :eof :value ""} 
+        
+        (is-digit h) 
+        (number all)
 
-      (is-digit h)
-      (number all)
+        (is-alpha h)
+        (word all)
 
-      (is-alpha h)
-      (word all)
-
-      :else
-      (operator all))))
+        :else
+        (operator all)))))
 
 (defn next-token [s]
   (peek_ s))
@@ -108,3 +111,7 @@
       '{:type :word, :value "a123abc"}))
 (is (= (next-token "123abc+") 
       '{:type :number, :value "123"}))
+(is (= (next-token "  abc+") 
+      '{:type :word, :value "abc"}))
+(is (= (next-token "def  abc+") 
+      '{:type :word, :value "def"}))
