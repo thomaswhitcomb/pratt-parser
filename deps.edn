@@ -3,13 +3,13 @@
  :deps {
  }
  :aliases {
-  ;:test {
-   ;:extra-paths ["test"]
-   ;:extra-deps {
-   ; com.cognitect/test-runner {:git/url "https://github.com/cognitect-labs/test-runner.git", :sha "028a6d41ac9ac5d5c405dfc38e4da6b4cc1255d5"}
-   ;}
-   ;:main-opts ["-m" "cognitect.test-runner"]
-  ;}
+  :test {
+   :extra-paths ["test"]
+   :extra-deps {
+    com.cognitect/test-runner {:git/url "https://github.com/cognitect-labs/test-runner.git", :sha "028a6d41ac9ac5d5c405dfc38e4da6b4cc1255d5"}
+   }
+   :main-opts ["-m" "cognitect.test-runner"]
+  }
   :uberjar {
    :extra-deps {
     pack/pack.alpha {:git/url "https://github.com/juxt/pack.alpha.git", :sha "595388c5b909759445a92a19192df50e427aa9a5"}

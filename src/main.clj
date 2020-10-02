@@ -14,4 +14,4 @@
       (prn (parser 0))))
 
 (is (= ((pratt/new-parser ((lexer/new-lexer "1 + ( (2 * 4) - 3)") :start)) 0)
-       '(:add (:literal "1") (:subtract (:multiply (:literal "2") (:literal "4")) (:literal "3")))))
+       '(:dd (:literal "1") (:subtract (:multiply (:literal "2") (:literal "4")) (:literal "3")))))
