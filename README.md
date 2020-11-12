@@ -25,14 +25,16 @@ You will need to install Clojure and either Java 8 or 11.  You can get the detai
 `(load-file "src/pratt.clj")`
 
 ;  Create a lexical analyzer
-`(def lexer (lexer/new-lexer "1 + ( (2 * 4) - 3)"))`
+`(def lexer (lexer/new-lexer "1+((2*4)-3)"))`
 
 ; Start the lexical analyzer
-`(lexer :start)` ; returns first token
+`(lexer :start)` ; returns first token.
 
-`(lexer :curr)` ; returns current token
+`(lexer :curr)` ; returns current token.
 
-`(lexer :next)` ; returns next token
+`(lexer :next)` ; returns next token.
+
+`(lexer :curr_next)` ; returns the current token and advances.
 
 ; Create a parser
 `(def parser (pratt/new-parser lexer))`

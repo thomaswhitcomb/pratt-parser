@@ -27,7 +27,7 @@
     (merge token {:nud (fn [] (let [e (parser 0)
                                   l (parser)]
                               (if (= (:value (l :curr)) ")")
-                                (do (l :next) e)
+                                (do ((l :next) :curr) e)
                                 (throw (Exception. "Missing right paren")))))})))
 
 (defn decorate-prefix-neg [f oper lbp]

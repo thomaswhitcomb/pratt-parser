@@ -49,7 +49,7 @@
    :value (take-while (fn [c] (or (is-alpha c) (is-digit c))) cs)})
 
 (defn operator [cs]
-  (let [x (take-while (fn [c] (and (not (= c \space)) (not (is-alpha c)) (not (is-digit c)))) cs)]
+  (let [x (take-while (fn [c] (and (not (= c \space)) (not (= c \()) (not (= c \))) (not (is-alpha c)) (not (is-digit c)))) cs)]
   {:type (operators (to-str x))
    :value x}))
 
@@ -83,13 +83,14 @@
     (fn lexer [x]
       (cond
         (= x :start)
-        (do (lexer :next) lexer)
+        (lexer :next)
 
         (= x :next)
         (let [token (next-token @stream)]
           (do
             (swap! stream pop_ token)
-            (reset! curr token)))
+            (reset! curr token)
+            lexer))
 
         (= x :curr)
         @curr
@@ -116,9 +117,18 @@
 (is (= (next-token "def  abc+")
       '{:type :word, :value "def"}))
 
-(is (= (let [l (new-lexer "1 + ( (2 * 4) - 3)")]
+(is (= (let [l (new-lexer "1+((2 * 4)-3)")]
          ((l :start) :curr))
        {:type :number, :value "1"}))
+
 (is (= (let [l (new-lexer "1 + ( (2 * 4) - 3)")]
-         (l :next))
+         ((l :next) :curr))
        {:type :number, :value "1"}))
+
+(is (= (let [l (new-lexer "1 + ( (2 * 4) - 3)")]
+         (l :peek))
+       {:type :number, :value "1"}))
+
+(is (= (let [l (new-lexer "1+((2*4)-3)")]
+         (( (l :next) :next) :curr))
+       {:type :add, :value "+"}))
