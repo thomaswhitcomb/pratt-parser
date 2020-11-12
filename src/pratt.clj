@@ -6,70 +6,68 @@
      [clojure.string :as s]
      ))
 
-(defn decorate-number []
-  (fn [{value :value :as token}]
+(defn decorate-literal []
+  (fn [parser {value :value :as token}]
     (merge token {:nud
                   (fn [] (list :literal value ))})))
 
-(defn decorate-word []
-  (fn [{value :value :as token}]
-    (merge token {:nud (fn [] (list :literal value ))})))
+(defn decorate-right-paren []
+  (fn [parser token]
+    (merge token {:lbp 0})))
+
+(defn decorate-power []
+  (fn [parser token]
+    (merge token {:lbp 30
+                :led (fn [left]
+                       (let [right (parser (- 30 1))]
+                         (list :power left right )))})))
+
+(defn decorate-left-paren []
+  (fn [parser {value :value :as token}]
+    (merge token {:nud (fn [] (let [e (parser 0)
+                                  l (parser)]
+                              (if (= (:value (l :curr)) ")")
+                                (do (l :next) e)
+                                (throw (Exception. "Missing right paren")))))})))
+
+(defn decorate-prefix-neg [f oper lbp]
+  (fn [parser token]
+    (let [new-token (f parser token)]
+      (merge new-token { :nud (fn [] (let [e (parser lbp)] (list oper e )))}))))
+
+(defn decorate-infix-oper [oper lbp]
+  (fn [parser token]
+    (merge token {:lbp lbp
+                :led (fn [left]
+                       (let [right (parser lbp)]
+                         (list oper left right )))})))
 
 
 (def decorator {
-                :number  (decorate-number)
-                :word (decorate-word)
+                :number  (decorate-literal)
+                :word (decorate-literal)
+                :left-paren (decorate-left-paren)
+                :right-paren (decorate-right-paren)
+                :power (decorate-power)
+                :add (decorate-infix-oper :add 10)
+                :multiply (decorate-infix-oper :multiply 20)
+                :divide (decorate-infix-oper :divide 20)
+                :subtract (decorate-prefix-neg (decorate-infix-oper :subtract 10) :neg 100)
                 })
 
 (defn decorate-token [parser {t :type value :value :as token}]
   (cond
     (contains? decorator t)
-    ((t decorator) token)
+    ((t decorator) parser token)
 
-    (= t :left-paren)
-    (merge token {:nud (fn [] (let [e (parser 0)
-                                  l (parser)]
-                              (if (= (:value (l :curr)) ")")
-                                (do
-                                  (l :next)
-                                  e)
-                                (throw (Exception. "Missing right paren")))))})
-
-    (= t :right-paren)
-    (merge token {:lbp 0})
-
-    (= t :power)
-    (merge token {:lbp 30
-                :led (fn [left]
-                       (let [right (parser (- 30 1))]
-                         (list :power left right )))})
-
-    (= t :add)
-    (merge token {:lbp 10
-                :led (fn [left]
-                       (let [right (parser 10)]
-                         (list :add left right )))})
-
-    (= t :subtract)
-    (merge token {:lbp 10
-                :nud (fn []
-                         (let [e (parser 100)]
-                           (list :neg e )))
-                :led (fn [left]
-                       (let [right (parser 10)]
-                         (list :subtract left right)))})
-
-    (= t :multiply)
-    (merge token {:lbp 20
-                :led (fn [left]
-                       (let [right (parser 20)]
-                         (list :multiply left right )))})
-
-    (= t :divide)
-    (merge token {:lbp 20
-                :led (fn [left]
-                       (let [right (parser 20)]
-                         (list :divide left right)))})
+    ;(= t :subtract)
+    ;(merge token {:lbp 10
+    ;            :nud (fn []
+    ;                     (let [e (parser 100)]
+    ;                       (list :neg e )))
+    ;            :led (fn [left]
+    ;                   (let [right (parser 10)]
+    ;                     (list :subtract left right)))})
 
     (= t :eof)
     (merge token {:lbp 0

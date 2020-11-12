@@ -22,11 +22,11 @@
    "~"  :tilda })
 
 (defn is-alpha [c]
-  (let [i (int c)] 
+  (let [i (int c)]
     (and (>= i (int \A)) (<= i (int \z)))))
 
 (defn is-digit [c]
-  (let [i (int c)] 
+  (let [i (int c)]
     (and (>= i (int \0)) (<= i (int \9)))))
 
 
@@ -41,11 +41,11 @@
   (assoc token :value (to-str value)))
 
 (defn number [cs]
-  {:type :number 
+  {:type :number
    :value (take-while is-digit cs)})
 
 (defn word [cs]
-  {:type :word 
+  {:type :word
    :value (take-while (fn [c] (or (is-alpha c) (is-digit c))) cs)})
 
 (defn operator [cs]
@@ -54,18 +54,18 @@
    :value x}))
 
 (defn pop_ [tail {value :value} ]
-    (drop 
-      (count value) 
+    (drop
+      (count value)
     (remove-leading-whitespace tail)))
 
 (defn peek_ [cs]
-  (normalize-token 
-    (let [[h :as all] (remove-leading-whitespace cs)] 
-      (cond 
-        (nil? h) 
-        {:type :eof :value ""} 
-        
-        (is-digit h) 
+  (normalize-token
+    (let [[h :as all] (remove-leading-whitespace cs)]
+      (cond
+        (nil? h)
+        {:type :eof :value ""}
+
+        (is-digit h)
         (number all)
 
         (is-alpha h)
@@ -77,26 +77,26 @@
 (defn next-token [s]
   (peek_ s))
 
-(defn new-lexer [s] 
+(defn new-lexer [s]
   (let [stream (atom s)
         curr (atom nil)]
-    (fn lexer [x] 
+    (fn lexer [x]
       (cond
         (= x :start)
         (do (lexer :next) lexer)
 
         (= x :next)
         (let [token (next-token @stream)]
-          (do 
+          (do
             (swap! stream pop_ token)
             (reset! curr token)))
 
-        (= x :curr) 
+        (= x :curr)
         @curr
 
         (= x :curr_next)
         (let [x @curr]
-          (do 
+          (do
             (lexer :next)
             x))
 
@@ -107,11 +107,18 @@
 (is (and (is-digit \0) (is-digit \3) (is-digit \9) (not (is-digit \h))))
 (is (= (remove-leading-whitespace (seq "   123")) (list \1 \2 \3)))
 (is (= (remove-leading-whitespace (seq "123")) (list \1 \2 \3)))
-(is (= (next-token "a123abc+") 
+(is (= (next-token "a123abc+")
       '{:type :word, :value "a123abc"}))
-(is (= (next-token "123abc+") 
+(is (= (next-token "123abc+")
       '{:type :number, :value "123"}))
-(is (= (next-token "  abc+") 
+(is (= (next-token "  abc+")
       '{:type :word, :value "abc"}))
-(is (= (next-token "def  abc+") 
+(is (= (next-token "def  abc+")
       '{:type :word, :value "def"}))
+
+(is (= (let [l (new-lexer "1 + ( (2 * 4) - 3)")]
+         ((l :start) :curr))
+       {:type :number, :value "1"}))
+(is (= (let [l (new-lexer "1 + ( (2 * 4) - 3)")]
+         (l :next))
+       {:type :number, :value "1"}))
