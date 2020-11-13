@@ -29,6 +29,11 @@
   (let [i (int c)]
     (and (>= i (int \0)) (<= i (int \9)))))
 
+(defn is-alphanumeric [c]
+  (or (is-digit c) (is-alpha c)))
+
+(defn is-paren [c]
+  (or (= c \() (= c \))))
 
 (defn remove-leading-whitespace [[c & cs :as all]]
   (cond
@@ -49,7 +54,17 @@
    :value (take-while (fn [c] (or (is-alpha c) (is-digit c))) cs)})
 
 (defn operator [cs]
-  (let [x (take-while (fn [c] (and (not (= c \space)) (not (= c \()) (not (= c \))) (not (is-alpha c)) (not (is-digit c)))) cs)]
+  (let [x (reduce (fn [l c]
+            (cond
+              (or (is-alphanumeric c) (= c \space))
+              (reduced l)
+              (and (> (count l) 0) (is-paren c))
+              (reduced l)
+              (and (= (count l) 0) (is-paren c))
+              (reduced (conj l c))
+              :else
+              (conj l c)))
+            [] cs)]
   {:type (operators (to-str x))
    :value x}))
 
