@@ -60,15 +60,6 @@
     (contains? decorator t)
     ((t decorator) parser token)
 
-    ;(= t :subtract)
-    ;(merge token {:lbp 10
-    ;            :nud (fn []
-    ;                     (let [e (parser 100)]
-    ;                       (list :neg e )))
-    ;            :led (fn [left]
-    ;                   (let [right (parser 10)]
-    ;                     (list :subtract left right)))})
-
     (= t :eof)
     (merge token {:lbp 0
                 :nud (fn []
@@ -77,6 +68,12 @@
     :else
     token))
 
+(defmulti new-parser (fn [& p]
+                       (cond
+                         (= (count p) 0)
+                         :start
+                         :else
+                         (first p))))
 
 (defn new-parser [lexer]
     (fn parser
